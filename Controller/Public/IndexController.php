@@ -32,6 +32,7 @@ use BaksDev\Products\Favorite\Repository\ProductsFavoriteAll\ProductFavoriteAllR
 use BaksDev\Products\Favorite\Repository\ProductsFavoriteAll\ProductsFavoriteAllInterface;
 use BaksDev\Products\Favorite\UseCase\Public\New\AnonymousProductsFavoriteDTO;
 use BaksDev\Products\Favorite\UseCase\Public\New\PublicProductsFavoriteForm;
+use BaksDev\Users\User\Entity\User;
 use Random\Randomizer;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -39,7 +40,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
-use BaksDev\Users\User\Entity\User;
 
 #[AsController]
 final class IndexController extends AbstractController
@@ -67,7 +67,7 @@ final class IndexController extends AbstractController
             }
         }
 
-        if($User === null)
+        if(false === ($User instanceof User))
         {
             $session = $request->getSession();
             $query = $allProductsFavorite->session($session)->findPublicPaginator();
@@ -78,11 +78,13 @@ final class IndexController extends AbstractController
             $key = md5($request->getClientIp().$request->headers->get('USER-AGENT').$salt);
 
             $cacheItem = $AppCache->getItem($key);
-            $cacheItem->set((string) $User);
+            $cacheItem->set($User->getUserIdentifier());
 
             $AppCache->save($cacheItem);
 
-            $query = $allProductsFavorite->user($User)->findUserPaginator();
+            $query = $allProductsFavorite
+                ->user($User->getId())
+                ->findUserPaginator();
         }
 
         $forms = [];
