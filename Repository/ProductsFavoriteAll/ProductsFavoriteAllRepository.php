@@ -53,12 +53,13 @@ use BaksDev\Products\Product\Entity\Photo\ProductPhoto;
 use BaksDev\Products\Product\Entity\Price\ProductPrice;
 use BaksDev\Products\Product\Entity\Product;
 use BaksDev\Products\Product\Entity\ProductInvariable;
+use BaksDev\Products\Product\Entity\Project\ProductProject;
+use BaksDev\Products\Product\Entity\Project\Season\ProductProjectSeason;
 use BaksDev\Products\Product\Entity\Trans\ProductTrans;
 use BaksDev\Products\Promotion\BaksDevProductsPromotionBundle;
 use BaksDev\Products\Promotion\Entity\Event\Invariable\ProductPromotionInvariable;
 use BaksDev\Products\Promotion\Entity\Event\Period\ProductPromotionPeriod;
 use BaksDev\Products\Promotion\Entity\Event\Price\ProductPromotionPrice;
-use BaksDev\Products\Promotion\Entity\Event\ProductPromotionEvent;
 use BaksDev\Products\Promotion\Entity\ProductPromotion;
 use BaksDev\Products\Stocks\BaksDevProductsStocksBundle;
 use BaksDev\Products\Stocks\Entity\Total\ProductStockTotal;
@@ -69,6 +70,7 @@ use BaksDev\Users\Profile\UserProfile\Entity\UserProfile;
 use BaksDev\Users\User\Entity\User;
 use BaksDev\Users\User\Type\Id\UserUid;
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -412,6 +414,34 @@ final class ProductsFavoriteAllRepository implements ProductsFavoriteAllInterfac
                 ProductInfo::class,
                 'product_info',
                 'product_info.product = product.id',
+            );
+
+        /* Получить товарную наценку (скидку) по сезонности с учетом текущего месяца */
+        $dbal
+            ->leftJoin(
+                'product_invariable',
+                ProductProject::class,
+                'product_project',
+                '
+                    product_project.product = product_invariable.product
+                    '.(true === $dbal->bindProjectProfile()
+                    ? 'AND product_project.profile = :'.$dbal::PROJECT_PROFILE_KEY
+                    : 'AND product_project.profile IS NULL'),
+            );
+
+        $dbal
+            ->addSelect('product_project_season.percent as season_percent')
+            ->leftJoin(
+                'product_project',
+                ProductProjectSeason::class,
+                'product_project_season',
+                'product_project_season.project = product_project.id
+                     AND product_project_season.month = :month',
+            )
+            ->setParameter(
+                key: 'month',
+                value: (int) date('n'),
+                type: ParameterType::INTEGER,
             );
 
         /**
