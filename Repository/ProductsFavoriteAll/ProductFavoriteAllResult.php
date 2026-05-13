@@ -297,6 +297,12 @@ final readonly class ProductFavoriteAllResult implements ProductCardResultInterf
         /** Оригинальная цена */
         $price = new Money($this->product_price, true);
 
+        /* Торговая наценка с учетом сезонности */
+        if(false === empty($this->season_percent))
+        {
+            $price->applyString($this->season_percent);
+        }
+
         /** Кастомная цена */
         if(false === empty($this->promotion_price) && true === $this->promotion_active)
         {
@@ -313,11 +319,6 @@ final readonly class ProductFavoriteAllResult implements ProductCardResultInterf
         if(false === empty($this->profile_discount))
         {
             $price->applyString($this->profile_discount);
-        }
-
-        /* Торговая наценка с учетом сезонности */
-        if (false === empty($this->season_percent)) {
-            $price->applyString($this->season_percent);
         }
 
         return $price;
@@ -332,6 +333,12 @@ final readonly class ProductFavoriteAllResult implements ProductCardResultInterf
 
         $price = new Money($this->product_old_price, true);
 
+        /* Торговая наценка с учетом сезонности */
+        if(false === empty($this->season_percent))
+        {
+            $price->applyString($this->season_percent);
+        }
+
         /** Кастомная цена */
         if(false === empty($this->promotion_price) && true === $this->promotion_active)
         {
@@ -348,11 +355,6 @@ final readonly class ProductFavoriteAllResult implements ProductCardResultInterf
         if(false === empty($this->profile_discount))
         {
             $price->applyString($this->profile_discount);
-        }
-
-        /* Торговая наценка с учетом сезонности */
-        if (false === empty($this->season_percent)) {
-            $price->applyString($this->season_percent);
         }
 
         return $price;
